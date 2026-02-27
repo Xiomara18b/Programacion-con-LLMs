@@ -1,1 +1,19 @@
+El Problema: Estabilidad de Variables en Modelos de Riesgo
+
+Trabajas para una aseguradora. Han notado que, al cambiar ligeramente los datos de entrenamiento, la importancia de ciertas variables cambia drásticamente. Necesitas identificar qué variables tienen coeficientes estables (que no varían mucho) para construir un modelo en el que los actuarios puedan confiar.
+
+Tu Misión:
+Escribe una función llamada analizar_estabilidad_coeficientes(X, y, n_bootstrap=100) que realice lo siguiente:
+1.	Remuestreo (Numpy):
+Realiza un bucle n_bootstrap veces. En cada iteración, crea una muestra con reemplazo de los datos originales X e y (usando el tamaño original del dataset).
+2.	Modelado (Sklearn):
+o	En cada iteración, entrena un modelo de Lasso Regression (Lasso) con un parámetro alpha=0.1.
+o	Asegúrate de escalar los datos dentro de cada iteración utilizando StandardScaler para que los coeficientes sean comparables.
+3.	Recolección de Coeficientes (Pandas):
+Almacena los coeficientes de cada variable para todas las iteraciones en un DataFrame donde las columnas sean los nombres de las características.
+4.	Cálculo de Robustez (Numpy):
+Para cada variable, calcula el Coeficiente de Variación (CV), definido como:
+$CV = \frac{\sigma}{\mu}$ (Desviación estándar dividida por la media de los coeficientes obtenidos).
+5.	Retorno:
+La función debe devolver un DataFrame de Pandas ordenado de menor a mayor por el valor de $CV$. Las variables con el CV más bajo son las más estables.
 
