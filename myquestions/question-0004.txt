@@ -1,1 +1,16 @@
+El Problema: Verificación de Integridad de Datos vía Error de Reconstrucción
+
+En un sistema de monitorización de turbinas eólicas, recibes ráfagas de telemetría de 10 sensores distintos. A veces, un sensor se descalibra o sufre interferencias electromagnéticas, enviando datos que son "numéricamente posibles" pero que rompen la correlación física entre los sensores.
+
+Tu Misión:
+Escribe una función llamada verificar_integridad_senal(X_train, X_test, threshold_percentile=95) que realice lo siguiente:
+1.	Aprendizaje de la Estructura (Sklearn): Utiliza PCA (Principal Component Analysis) para aprender la correlación entre los sensores en el conjunto de entrenamiento (X_train). Debes configurar PCA para mantener el 90% de la varianza explicada.
+2.	Compresión y Reconstrucción (Numpy/Sklearn):
+o	Proyecta los datos de prueba (X_test) al espacio reducido (transform).
+o	Inmediatamente, reconstruye los datos de prueba de vuelta a su dimensión original de 10 columnas (inverse_transform).
+3.	Cálculo del Error de Reconstrucción (Numpy): Calcula el Error Cuadrático Medio (MSE) fila por fila entre el X_test original y el X_test reconstruido. La lógica es: si PCA no puede reconstruir bien una fila, es porque esa fila no sigue la estructura de correlación normal de la turbina.
+4.	Definición de Alerta (Pandas):
+o	Calcula un umbral dinámico basado en el percentil indicado por threshold_percentile de los errores obtenidos en el entrenamiento (o de los mismos errores de prueba si prefieres un enfoque relativo).
+o	Crea una columna booleana alerta_integridad que sea True si el error de esa fila supera el umbral.
+5.	Retorno: La función debe devolver un DataFrame con los datos originales de X_test y la columna alerta_integridad.
 
