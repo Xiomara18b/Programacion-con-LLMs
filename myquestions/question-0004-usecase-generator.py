@@ -1,80 +1,99 @@
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
-from sklearn.metrics import mean_squared_error
 
+# --- 1. FUNCIÓN DE LA MISIÓN: verificar_integridad_senal ---
 def verificar_integridad_senal(X_train, X_test, threshold_percentile=95):
     """
-    Verifica si los datos de sensores mantienen la correlación física
-    mediante el error de reconstrucción de PCA.
+    Evalúa la integridad de señales de sensores mediante el error de reconstrucción PCA.
     """
-    # 1. Aprendizaje de la Estructura (90% varianza explicada)
+    # Aprendizaje de la Estructura (Sklearn)
+    # n_components=0.9 mantiene el 90% de la varianza explicada
     pca = PCA(n_components=0.9, svd_solver='full')
     pca.fit(X_train)
     
-    # 2. Compresión y Reconstrucción
-    X_test_compressed = pca.transform(X_test)
-    X_test_reconstructed = pca.inverse_transform(X_test_compressed)
+    # Compresión y Reconstrucción (Numpy/Sklearn)
+    X_test_reduced = pca.transform(X_test)
+    X_test_reconstructed = pca.inverse_transform(X_test_reduced)
     
-    # 3. Cálculo del Error de Reconstrucción (MSE fila por fila)
-    # Calculamos (original - reconstruido)^2 y promediamos por fila
-    mse_per_row = np.mean((X_test.values - X_test_reconstructed)**2, axis=1)
+    # Cálculo del Error de Reconstrucción (Numpy)
+    # MSE fila por fila entre original y reconstruido
+    diferencia = X_test.values - X_test_reconstructed
+    mse_fila = np.mean(np.square(diferencia), axis=1)
     
-    # 4. Definición de Alerta
-    # Usamos el percentil de los errores de los mismos datos de prueba (enfoque relativo)
-    umbral = np.percentile(mse_per_row, threshold_percentile)
+    # Definición de Alerta (Pandas)
+    # Umbral dinámico basado en el percentil de los errores
+    umbral = np.percentile(mse_fila, threshold_percentile)
     
-    # 5. Retorno
+    # Retorno del DataFrame original con la columna de alerta
     resultado_df = X_test.copy()
-    resultado_df['alerta_integridad'] = mse_per_row > umbral
+    resultado_df['alerta_integridad'] = mse_fila > umbral
     
     return resultado_df
 
+# --- 2. GENERADOR DE CASOS DE USO: generar_caso_de_uso_verificar_integridad_senal ---
 def generar_caso_de_uso_verificar_integridad_senal():
     """
-    Genera un caso de uso aleatorio (input/output) para la verificación de integridad.
+    Genera casos de uso aleatorios con dimensiones y ruidos variables.
     """
-    # Configuraciones aleatorias
-    n_train = 200
-    n_test = 50
-    n_sensores = 10
-    percentil = 95
+    # Dimensiones aleatorias para asegurar variabilidad
+    n_train = np.random.randint(150, 400)
+    n_test = np.random.randint(30, 100)
+    n_sensores = 10 # Según especificación del problema
     
-    # Crear estructura física base (correlacionada)
-    base_train = np.random.randn(n_train, 1)
-    # Todos los sensores dependen de la base + un poco de ruido normal
-    X_train_data = base_train @ np.ones((1, n_sensores)) + np.random.normal(0, 0.1, (n_train, n_sensores))
+    # Generación de estructura de correlación física aleatoria
+    # Creamos una señal latente de 2 dimensiones que los sensores deben seguir
+    señal_latente_train = np.random.randn(n_train, 2)
+    señal_latente_test = np.random.randn(n_test, 2)
     
-    base_test = np.random.randn(n_test, 1)
-    X_test_data = base_test @ np.ones((1, n_sensores)) + np.random.normal(0, 0.1, (n_test, n_sensores))
+    # Matriz de mezcla aleatoria (representa cómo cada sensor reacciona a la física)
+    mezcla = np.random.uniform(0.5, 3.0, (2, n_sensores))
     
-    # Inyectar anomalía: rompemos la correlación en el sensor 5 de algunas filas
-    X_test_data[0:2, 5] += 10.0 # Un sensor descalibrado
+    # Datos normales con ruido blanco
+    X_train_raw = señal_latente_train @ mezcla + np.random.normal(0, 0.1, (n_train, n_sensores))
+    X_test_raw = señal_latente_test @ mezcla + np.random.normal(0, 0.1, (n_test, n_sensores))
     
-    # Convertir a DataFrames de Pandas
+    # Inyección de anomalías aleatorias (rompen la correlación)
+    n_fallos = np.random.randint(2, 6)
+    for _ in range(n_fallos):
+        f_idx = np.random.randint(0, n_test)
+        c_idx = np.random.randint(0, n_sensores)
+        X_test_raw[f_idx, c_idx] += np.random.uniform(10, 20) # Error de escala
+        
+    # Crear DataFrames
     cols = [f'sensor_{i}' for i in range(n_sensores)]
-    X_train = pd.DataFrame(X_train_data, columns=cols)
-    X_test = pd.DataFrame(X_test_data, columns=cols)
+    X_train = pd.DataFrame(X_train_raw, columns=cols)
+    X_test = pd.DataFrame(X_test_raw, columns=cols)
     
-    # Empaquetar Input
+    # Parámetros de entrada
+    perc = np.random.choice([90, 95, 98])
     input_dict = {
         "X_train": X_train,
         "X_test": X_test,
-        "threshold_percentile": percentil
+        "threshold_percentile": perc
     }
     
-    # El Output esperado es el resultado de la función lógica
-    output_expected = verificar_integridad_senal(X_train, X_test, threshold_percentile=percentil)
+    # Generar salida esperada
+    output_expected = verificar_integridad_senal(X_train, X_test, threshold_percentile=perc)
     
     return input_dict, output_expected
 
-# --- Ejecución para ver resultados en consola ---
+# --- 3. VALIDACIÓN Y SALIDA EN CONSOLA ---
 if __name__ == "__main__":
-    input_data, output_df = generar_caso_de_uso_verificar_integridad_senal()
+    # Ejecutamos el generador
+    inputs, esperado = generar_caso_de_uso_verificar_integridad_senal()
     
-    print("--- RESULTADOS DE INTEGRIDAD DE SENSORES ---")
-    print(output_df.head(10)) # Mostramos las primeras 10 filas
+    print(f"--- REPORTE DE INTEGRIDAD DE TURBINA ---")
+    print(f"Tamaño X_train: {inputs['X_train'].shape}")
+    print(f"Tamaño X_test:  {inputs['X_test'].shape}")
+    print(f"Percentil usado: {inputs['threshold_percentile']}%")
+    print("-" * 40)
     
-    alertas = output_df['alerta_integridad'].sum()
-    print(f"\nTotal de lecturas analizadas: {len(output_df)}")
-    print(f"Alertas de integridad detectadas: {alertas}")
+    # Mostrar filas donde se detectó alerta
+    alertas_df = esperado[esperado['alerta_integridad'] == True]
+    
+    if not alertas_df.empty:
+        print(f"Se detectaron {len(alertas_df)} anomalías de integridad:")
+        print(alertas_df.head())
+    else:
+        print("No se detectaron anomalías en este ciclo.")
