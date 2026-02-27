@@ -3,7 +3,34 @@ import numpy as np
 from sklearn.linear_model import Lasso
 from sklearn.preprocessing import StandardScaler
 
-# --- FUNCIÓN DE LA MISIÓN ---
+# --- 1. GENERADOR DE CASOS DE USO ---
+def generar_caso_de_uso_analizar_estabilidad_coeficientes():
+    """
+    Genera un par input/output aleatorio para pruebas.
+    """
+    n_muestras = 100
+    n_vars = 5
+    
+    # Creamos variables aleatorias
+    X_data = np.random.randn(n_muestras, n_vars)
+    columnas = [f'Factor_{i}' for i in range(n_vars)]
+    X = pd.DataFrame(X_data, columns=columnas)
+    
+    # Creamos 'y' con una relación fuerte con Factor_0 (será la más estable)
+    y = 5 * X['Factor_0'] + 2 * X['Factor_1'] + np.random.normal(0, 1, n_muestras)
+    
+    input_dict = {
+        "X": X,
+        "y": pd.Series(y),
+        "n_bootstrap": 100
+    }
+    
+    # Calculamos la salida esperada llamando a la función lógica definida abajo
+    output_expected = analizar_estabilidad_coeficientes(**input_dict)
+    
+    return input_dict, output_expected
+
+# --- 2. FUNCIÓN DE LA MISIÓN: analizar_estabilidad_coeficientes ---
 def analizar_estabilidad_coeficientes(X, y, n_bootstrap=100):
     """
     Realiza un análisis de estabilidad de coeficientes usando Bootstrap y Lasso.
@@ -13,7 +40,7 @@ def analizar_estabilidad_coeficientes(X, y, n_bootstrap=100):
     
     # 1. Remuestreo (Numpy)
     for _ in range(n_bootstrap):
-        # Generar índices aleatorios con reemplazo
+        # Generar índices aleatorios con reemplazo usando Numpy
         indices = np.random.choice(n_filas, size=n_filas, replace=True)
         X_res = X.iloc[indices]
         y_res = y.iloc[indices]
@@ -46,34 +73,7 @@ def analizar_estabilidad_coeficientes(X, y, n_bootstrap=100):
     
     return resultado.sort_values(by='cv').reset_index(drop=True)
 
-# --- GENERADOR DE CASOS DE USO ---
-def generar_caso_de_uso_analizar_estabilidad_coeficientes():
-    """
-    Genera un par input/output aleatorio para pruebas.
-    """
-    n_muestras = 100
-    n_vars = 5
-    
-    # Creamos variables aleatorias
-    X_data = np.random.randn(n_muestras, n_vars)
-    columnas = [f'Factor_{i}' for i in range(n_vars)]
-    X = pd.DataFrame(X_data, columns=columnas)
-    
-    # Creamos 'y' con una relación fuerte con Factor_0 (será la más estable)
-    y = 5 * X['Factor_0'] + 2 * X['Factor_1'] + np.random.normal(0, 1, n_muestras)
-    
-    input_dict = {
-        "X": X,
-        "y": pd.Series(y),
-        "n_bootstrap": 100
-    }
-    
-    # Calculamos la salida esperada
-    output_expected = analizar_estabilidad_coeficientes(**input_dict)
-    
-    return input_dict, output_expected
-
-# --- BLOQUE DE SALIDA EN CONSOLA ---
+# --- 3. BLOQUE DE SALIDA EN CONSOLA ---
 if __name__ == "__main__":
     # Obtenemos los datos del generador
     input_test, output_test = generar_caso_de_uso_analizar_estabilidad_coeficientes()
