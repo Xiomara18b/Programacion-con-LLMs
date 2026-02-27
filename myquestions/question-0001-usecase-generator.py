@@ -3,6 +3,26 @@ import numpy as np
 import random
 from sklearn.metrics import confusion_matrix
 
+# --- 1. GENERADOR DE CASOS DE USO ---
+def generar_caso_de_uso_auditar_equidad_genero():
+    """
+    Genera un caso aleatorio (input) y calcula el resultado esperado (output).
+    """
+    # Configuración aleatoria de n entre 15 y 50
+    n = random.randint(15, 50)
+    data = {
+        'genero': [random.choice(['M', 'F']) for _ in range(n)],
+        'real': [random.choice([0, 1]) for _ in range(n)],
+        'prediccion': [random.choice([0, 1]) for _ in range(n)]
+    }
+    df_test = pd.DataFrame(data)
+    
+    # El 'output' se genera llamando a la función lógica definida abajo
+    expected_output = auditar_equidad_genero(df_test)
+    
+    return {"df": df_test}, expected_output
+
+# --- 2. FUNCIÓN DE AUDITORÍA ---
 def auditar_equidad_genero(df):
     """
     Función objetivo: Calcula FNR por género y detecta disparidad.
@@ -42,26 +62,7 @@ def auditar_equidad_genero(df):
         "es_sesgado": bool(disparidad > 1.20)
     }
 
-def generar_caso_de_uso_auditar_equidad_genero():
-    """
-    Genera un caso aleatorio (input) y calcula el resultado esperado (output).
-    """
-    # Configuración aleatoria
-    n = random.randint(15, 50)
-    data = {
-        'genero': [random.choice(['M', 'F']) for _ in range(n)],
-        'real': [random.choice([0, 1]) for _ in range(n)],
-        'prediccion': [random.choice([0, 1]) for _ in range(n)]
-    }
-    df_test = pd.DataFrame(data)
-    
-    # El 'output' se genera llamando a la función lógica 
-    # (o replicando su lógica manualmente para validación cruzada)
-    expected_output = auditar_equidad_genero(df_test)
-    
-    return {"df": df_test}, expected_output
-
-# --- Ejemplo de Ejecución ---
+# --- 3. EJEMPLO DE EJECUCIÓN ---
 if __name__ == "__main__":
     entrada, salida_esperada = generar_caso_de_uso_auditar_equidad_genero()
     
