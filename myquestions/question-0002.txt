@@ -1,1 +1,20 @@
+El Problema: Detección de Inyecciones de Datos en Sensores de IoT
+
+En una red de sensores de presión de agua, un atacante o un fallo técnico puede inyectar datos que parecen normales individualmente (están dentro del rango de presión permitido), pero son anómalos en su contexto temporal. Por ejemplo, una presión alta es normal a las 10:00 AM (uso pico), pero sospechosa a las 3:00 AM.
+
+Tu Misión:
+Escribe una función llamada detectar_intrusiones_temporales(df, contamination=0.01) que realice lo siguiente:
+1.	Ingeniería de Características Cíclicas (Numpy):
+El tiempo es circular. Para que un modelo entienda que las 23:59 y las 00:01 están cerca, debes transformar la columna hora (0-23) en dos dimensiones usando seno y coseno:
+o	$hora\_sin = \sin(2 \cdot \pi \cdot \text{hora} / 24)$
+o	$hora\_cos = \cos(2 \cdot \pi \cdot \text{hora} / 24)$
+2.	Preparación de Datos (Pandas):
+o	Asegúrate de que el DataFrame contenga las columnas originales y las nuevas columnas cíclicas.
+o	Elimina la columna hora original para evitar redundancia lineal.
+3.	Detección de Anomalías (Sklearn):
+o	Instancia el modelo IsolationForest con el parámetro contamination recibido (que define la proporción esperada de anomalías).
+o	Usa random_state=42.
+o	Entrena y predice sobre el DataFrame resultante.
+4.	Retorno:
+o	La función debe devolver el DataFrame original con una nueva columna es_anomalia (donde True representa una anomalía, es decir, cuando el modelo devuelve -1).
 
