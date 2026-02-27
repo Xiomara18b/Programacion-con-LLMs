@@ -1,1 +1,24 @@
+El Problema: Auditoría de Equidad (Fairness Audit) en Créditos
+
+Una entidad bancaria utiliza un modelo para aprobar o rechazar préstamos. Te han proporcionado un conjunto de datos con las predicciones ya realizadas y los valores reales, junto con una columna de "género". Tu objetivo es medir si el modelo es "justo" comparando la Tasa de Falsos Negativos (FNR) entre grupos.
+Un Falso Negativo en este contexto es una persona que sí era capaz de pagar el crédito (valor real = 1), pero el modelo lo rechazó (predicción = 0).
+
+Tu Misión:
+Escribe una función llamada auditar_equidad_genero(df) que realice lo siguiente:
+1.	Cálculo de Métricas por Grupo (Numpy/Pandas):
+Divide el DataFrame en dos grupos basados en la columna genero (valores: 'M' y 'F').
+2.	Uso de Sklearn:
+Para cada grupo, utiliza la función confusion_matrix de sklearn.metrics para obtener los Falsos Negativos (FN) y los Verdaderos Positivos (TP).
+3.	Cálculo de la Tasa de Falsos Negativos (FNR):
+Calcula la tasa para cada grupo usando la fórmula:
+$FNR = \frac{FN}{FN + TP}$
+(Nota: Maneja con Numpy el caso de división por cero si un grupo no tiene positivos reales).
+4.	Detección de Disparidad:
+Calcula la "Razón de Disparidad" dividiendo el FNR del grupo con mayor error entre el FNR del grupo con menor error.
+5.	Retorno:
+La función debe devolver un diccionario con:
+o	fnr_hombres: float
+o	fnr_mujeres: float
+o	disparidad: float
+o	es_sesgado: booleano (True si la disparidad es mayor a 1.20, lo que indica un 20% más de error en un grupo).
 
