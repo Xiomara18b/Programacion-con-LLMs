@@ -2,36 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
 
-# --- 1. FUNCIÓN DE LA MISIÓN: verificar_integridad_senal ---
-def verificar_integridad_senal(X_train, X_test, threshold_percentile=95):
-    """
-    Evalúa la integridad de señales de sensores mediante el error de reconstrucción PCA.
-    """
-    # Aprendizaje de la Estructura (Sklearn)
-    # n_components=0.9 mantiene el 90% de la varianza explicada
-    pca = PCA(n_components=0.9, svd_solver='full')
-    pca.fit(X_train)
-    
-    # Compresión y Reconstrucción (Numpy/Sklearn)
-    X_test_reduced = pca.transform(X_test)
-    X_test_reconstructed = pca.inverse_transform(X_test_reduced)
-    
-    # Cálculo del Error de Reconstrucción (Numpy)
-    # MSE fila por fila entre original y reconstruido
-    diferencia = X_test.values - X_test_reconstructed
-    mse_fila = np.mean(np.square(diferencia), axis=1)
-    
-    # Definición de Alerta (Pandas)
-    # Umbral dinámico basado en el percentil de los errores
-    umbral = np.percentile(mse_fila, threshold_percentile)
-    
-    # Retorno del DataFrame original con la columna de alerta
-    resultado_df = X_test.copy()
-    resultado_df['alerta_integridad'] = mse_fila > umbral
-    
-    return resultado_df
-
-# --- 2. GENERADOR DE CASOS DE USO: generar_caso_de_uso_verificar_integridad_senal ---
+# --- 1. GENERADOR DE CASOS DE USO ---
 def generar_caso_de_uso_verificar_integridad_senal():
     """
     Genera casos de uso aleatorios con dimensiones y ruidos variables.
@@ -73,10 +44,39 @@ def generar_caso_de_uso_verificar_integridad_senal():
         "threshold_percentile": perc
     }
     
-    # Generar salida esperada
+    # Generar salida esperada llamando a la función definida abajo
     output_expected = verificar_integridad_senal(X_train, X_test, threshold_percentile=perc)
     
     return input_dict, output_expected
+
+# --- 2. FUNCIÓN DE LA MISIÓN: verificar_integridad_senal ---
+def verificar_integridad_senal(X_train, X_test, threshold_percentile=95):
+    """
+    Evalúa la integridad de señales de sensores mediante el error de reconstrucción PCA.
+    """
+    # Aprendizaje de la Estructura (Sklearn)
+    # n_components=0.9 mantiene el 90% de la varianza explicada
+    pca = PCA(n_components=0.9, svd_solver='full')
+    pca.fit(X_train)
+    
+    # Compresión y Reconstrucción (Numpy/Sklearn)
+    X_test_reduced = pca.transform(X_test)
+    X_test_reconstructed = pca.inverse_transform(X_test_reduced)
+    
+    # Cálculo del Error de Reconstrucción (Numpy)
+    # MSE fila por fila entre original y reconstruido
+    diferencia = X_test.values - X_test_reconstructed
+    mse_fila = np.mean(np.square(diferencia), axis=1)
+    
+    # Definición de Alerta (Pandas)
+    # Umbral dinámico basado en el percentil de los errores
+    umbral = np.percentile(mse_fila, threshold_percentile)
+    
+    # Retorno del DataFrame original con la columna de alerta
+    resultado_df = X_test.copy()
+    resultado_df['alerta_integridad'] = mse_fila > umbral
+    
+    return resultado_df
 
 # --- 3. VALIDACIÓN Y SALIDA EN CONSOLA ---
 if __name__ == "__main__":
